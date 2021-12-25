@@ -3,7 +3,6 @@ import 'flatpickr/dist/flatpickr.min.css';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
 const startBtn = document.querySelector('button');
-const currentDate = Date.now();
 let initDate = null;
 let timer = null;
 
@@ -23,7 +22,8 @@ const options = {
   minuteIncrement: 1,
   onClose(selectedDates) {
     initDate = selectedDates[0];
-    if (initDate > currentDate) {
+
+    if (isChosenDateValid(initDate)) {
       startBtn.disabled = false;
     } else {
       Notify.failure('Please choose a date in the future');
@@ -34,9 +34,13 @@ const options = {
 const flatpickrCalendar = flatpickr(inputDateEl, options);
 
 function onBtnStart() {
+  if (!isChosenDateValid(initDate)) {
+    Notify.failure('Please choose a date in the future');
+    return;
+  }
+
   timer = setInterval(() => {
-    const currentDate = Date.now();
-    let resultTime = initDate - currentDate;
+    let resultTime = initDate - Date.now();
     daysEl.textContent = addLeadingZero(convertMs(resultTime).days);
     hoursEl.textContent = addLeadingZero(convertMs(resultTime).hours);
     minutesEl.textContent = addLeadingZero(convertMs(resultTime).minutes);
@@ -57,14 +61,18 @@ function convertMs(ms) {
   const hour = minute * 60;
   const day = hour * 24;
 
-  const days = (Math.floor(ms / day));
-  const hours = (Math.floor((ms % day) / hour));
-  const minutes = (Math.floor(((ms % day) % hour) / minute));
-  const seconds = (Math.floor((((ms % day) % hour) % minute) / second));
+  const days = Math.floor(ms / day);
+  const hours = Math.floor((ms % day) / hour);
+  const minutes = Math.floor(((ms % day) % hour) / minute);
+  const seconds = Math.floor((((ms % day) % hour) % minute) / second);
 
   return { days, hours, minutes, seconds };
 }
 
 function addLeadingZero(value) {
-    return String(value).padStart(2, '0');
-  }
+  return String(value).padStart(2, '0');
+}
+
+function isChosenDateValid(chosenDate) {
+  return chosenDate > Date.now() ? true : false;
+}
